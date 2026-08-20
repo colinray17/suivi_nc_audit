@@ -1,0 +1,7 @@
+# Base de données locale
+*.db
+*.db-shm
+*.db-wal
+
+# Éditeurs
+.vs/

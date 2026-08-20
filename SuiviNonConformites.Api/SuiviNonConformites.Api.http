@@ -1,0 +1,36 @@
+@baseUrl = http://localhost:5135
+
+### Créer un audit
+POST {{baseUrl}}/api/Audits
+Content-Type: application/json
+
+{
+  "reference": "AUD-2026-001",
+  "client": "Acme",
+  "dateAudit": "2026-08-20"
+}
+
+### Créer un deuxième audit
+POST {{baseUrl}}/api/Audits
+Content-Type: application/json
+
+{
+  "reference": "AUD-2026-023",
+  "client": "Danone",
+  "dateAudit": "2026-08-18"
+}
+
+### Créer une non-conformité liée à cet audit (remplace auditId si besoin)
+POST {{baseUrl}}/api/NonConformites
+Content-Type: application/json
+
+{
+  "description": "Absence de traçabilité des lots",
+  "gravite": 1,
+  "statut": 0,
+  "dateEcheance": "2026-09-15",
+  "auditId": 1
+}
+
+### Récupérer l'audit avec ses non-conformités
+GET {{baseUrl}}/api/Audits/1
