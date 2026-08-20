@@ -1,0 +1,83 @@
+<div class="nc-container">
+  <h2>Suivi des non-conformités d'audit</h2>
+
+  <!-- Formulaire de création rapide -->
+  <form (ngSubmit)="creerNonConformite()" class="form-ajout">
+    <input
+      [(ngModel)]="nouvelleNc.description"
+      name="description"
+      placeholder="Description"
+      required
+    />
+
+    <select [(ngModel)]="nouvelleNc.gravite" name="gravite" required>
+      <option [ngValue]="Gravite.Mineure">Mineure</option>
+      <option [ngValue]="Gravite.Majeure">Majeure</option>
+      <option [ngValue]="Gravite.Critique">Critique</option>
+    </select>
+    <!--[ngValue] plutôt que [value] sur les <option> : [value] ne gère que des chaînes de caractères en HTML natif, alors que [ngValue] (spécifique à Angular) permet de binder de vraies valeurs typées (ici, des nombres d'enum) — indispensable dès qu'on manipule des enums dans un select-->
+
+    <input [(ngModel)]="nouvelleNc.dateEcheance" name="dateEcheance" type="date" required />
+
+    <input
+      [(ngModel)]="nouvelleNc.auditId"
+      name="auditId"
+      type="number"
+      placeholder="Id audit"
+      required
+    />
+
+    <button type="submit">Ajouter</button>
+  </form>
+
+  <!-- Filtre -->
+  <div class="filtre">
+    <label>Filtrer par statut :</label>
+    <select [(ngModel)]="filtreStatut" (ngModelChange)="chargerNonConformites()">
+      <option value="toutes">Toutes</option>
+      <option [ngValue]="StatutNonConformite.Ouverte">Ouverte</option>
+      <option [ngValue]="StatutNonConformite.EnCours">En cours</option>
+      <option [ngValue]="StatutNonConformite.Cloturee">Clôturée</option>
+    </select>
+  </div>
+
+  <!-- Tableau -->
+  <table>
+    <thead>
+      <tr>
+        <th>Audit</th>
+        <th>Description</th>
+        <th (click)="changerColonneTri('gravite')" class="triable">
+          Gravité {{ colonneTri === 'gravite' ? (triAscendant ? '▲' : '▼') : '' }}
+        </th>
+        <th (click)="changerColonneTri('dateEcheance')" class="triable">
+          Échéance {{ colonneTri === 'dateEcheance' ? (triAscendant ? '▲' : '▼') : '' }}
+        </th>
+        <!--En-têtes cliquables ((click)="changerColonneTri(...)") avec l'indicateur ▲/▼ : matérialise visuellement l'état actuel du tri.-->
+        <th>Statut</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (nc of nonConformites(); track nc.id) {
+        <tr>
+          <td>{{ nc.audit?.reference ?? 'Audit #' + nc.auditId }}</td>
+          <!-- le ?. (optional chaining) évite une erreur si audit est null (rappelle-toi, IgnoreCycles peut le mettre à null selon le sens de navigation) — et ?? (nullish coalescing) fournit un texte de repli si c'est le cas.-->
+          <td>{{ nc.description }}</td>
+          <td>{{ Gravite[nc.gravite] }}</td>
+          <!--même technique que dans le service — convertit la valeur numérique de l'enum en son nom lisible pour l'affichage.-->
+          <td>{{ nc.dateEcheance | date: 'dd/MM/yyyy' }}</td>
+          <td>
+            <select [ngModel]="nc.statut" (ngModelChange)="changerStatut(nc, $event)">
+              <!--(ngModelChange)="changerStatut(nc, $event)" sur le select de statut : plutôt que [(ngModel)] (two-way binding classique), on sépare ici lecture ([ngModel]="nc.statut") et écriture ((ngModelChange)="...") — nécessaire parce qu'on veut déclencher un appel API immédiatement au changement, pas juste synchroniser une variable locale.-->
+              <option [ngValue]="StatutNonConformite.Ouverte">Ouverte</option>
+              <option [ngValue]="StatutNonConformite.EnCours">En cours</option>
+              <option [ngValue]="StatutNonConformite.Cloturee">Clôturée</option>
+            </select>
+          </td>
+          <td><button (click)="supprimerNonConformite(nc.id)">Supprimer</button></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
